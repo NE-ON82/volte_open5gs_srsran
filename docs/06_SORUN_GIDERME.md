@@ -136,6 +136,25 @@ görünmüyorsa iOS IMS'i denemiyordur — ağ sorunu değildir.
 
 ---
 
+## 9. Telefon attach oluyor ama internete çıkamıyor
+
+**Belirti:** `mme` logunda `Attach complete` var ve telefon ağa bağlanıyor, ancak tarayıcıdan internete girilemiyor (ping gitmiyor). UPF logunda telefona `10.45.0.x` gibi bir IP atandığı görülüyor.
+
+**Sebep:** UPF, UE internet trafiğini maskelemeden (NAT yapmadan) docker ağı üzerinden host'a gönderiyordur. Host üzerinde bu trafiği internete çıkaracak `MASQUERADE` kuralı ve host'tan UPF'e dönecek geri dönüş rotası eksiktir.
+
+**Çözüm:** 
+Aşağıdaki komutlarla host üzerinde `10.45.0.0/16` ağı için (UPF container IP'si olan, örneğin `172.22.0.8` adresine) rota ve NAT kurallarını ekleyin:
+
+```bash
+sudo ip route add 10.45.0.0/16 via 172.22.0.8
+sudo iptables -t nat -A POSTROUTING -s 10.45.0.0/16 -j MASQUERADE
+sudo iptables -I FORWARD -s 10.45.0.0/16 -j ACCEPT
+sudo iptables -I FORWARD -d 10.45.0.0/16 -j ACCEPT
+```
+> **Not:** UPF container IP adresini `docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' upf` veya UPF başlangıç loglarından (`pfcp_server() [172.22.0.8]:8805`) doğrulayın.
+
+---
+
 ## Hızlı teşhis komutları
 
 ```bash
