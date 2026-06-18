@@ -27,14 +27,39 @@ sık yapılan hatadır. Ayrıntı: [`DURUM.md`](DURUM.md) §2-3.
 
 ---
 
+## Bu repo ne yapar, ne yapmaz (önce oku)
+
+Bu repo, **çalışan bir Open5GS/IMS/srsRAN kurulumunu VoLTE'ye yapılandırır** —
+sıfırdan derleme/kurulum aracı değildir. Net olmak gerekirse:
+
+- ✅ **Yapar:** iki HSS'e abone ekler, tam VoLTE APN profilini kurar, pyHSS IMS
+  provisioning'i otomatikler, servis başlat/durdur + kalıcılık, PLMN değiştirme,
+  attach/register doğrulama, ve tüm bunların kanıtlanmış dökümantasyonu.
+- ❌ **Yapmaz:** B210/UHD sürücülerini kurmaz, `docker_open5gs`'i senin yerine
+  derlemez, SIM'i programlamaz (pySim'i kullanman gerekir).
+
+**Ön koşullar:**
+1. Ubuntu 22.04 host, Docker + docker compose.
+2. `docker_open5gs` (herlesupreeth) klonlanmış ve `.env` ayarlanmış —
+   [`docs/01_KURULUM.md`](docs/01_KURULUM.md) baştan sona anlatır.
+3. USRP B210 + UHD sürücüleri çalışır durumda (`uhd_usrp_probe` geçer).
+4. sysmoISIM-SJA5 SIM'ler + pySim programlayıcı.
+
+Hiç Open5GS kurmadıysan: **önce [`docs/01_KURULUM.md`](docs/01_KURULUM.md)** (sıfırdan,
+adım adım), sonra aşağıdaki hızlı başlangıç. Zaten 4G ağın varsa direkt B) yolunu izle.
+
+---
+
 ## Hızlı başlangıç
 
 ### A) Sıfırdan kurulum
 ```bash
-git clone <bu-repo>
-cd <repo>/scripts
-./kurulum.sh
+git clone https://github.com/NE-ON82/volte_open5gs_srsran
+cd volte_open5gs_srsran/scripts
+./kurulum.sh          # orkestrasyon: adımları sırayla yönlendirir
 ```
+> `kurulum.sh` donanım/sürücü adımlarını **sana bırakır** (B210/UHD, docker_open5gs
+> derleme). Tam sıfırdan rehber: [`docs/01_KURULUM.md`](docs/01_KURULUM.md).
 
 ### B) Zaten çalışan bir 4G ağın varsa (telefon internete çıkıyor) → VoLTE ekle
 ```bash
@@ -94,6 +119,7 @@ VoLTE'nin çalışması için SIM ile ağdaki abone kaydı **birebir** eşleşme
 | [`docs/05_VOLTE_CAGRI.md`](docs/05_VOLTE_CAGRI.md) | Çağrı testi, log izleme |
 | [`docs/06_SORUN_GIDERME.md`](docs/06_SORUN_GIDERME.md) | xfrm, Invalid APN[ia], IPsec clean_sa, vb. |
 | [`docs/07_FAZLAR.md`](docs/07_FAZLAR.md) | Faz 0-7 yol haritası (VoLTE → SMS → VoNR) |
+| [`docs/08_SERVIS_VE_PLMN.md`](docs/08_SERVIS_VE_PLMN.md) | volte start/stop, kalıcı docker, PLMN değiştirme |
 
 ---
 
@@ -103,10 +129,12 @@ VoLTE'nin çalışması için SIM ile ağdaki abone kaydı **birebir** eşleşme
 |--------|-------|
 | `scripts/kurulum.sh` | Sıfırdan tam kurulum |
 | `scripts/tara_kur.sh` | Mevcut 4G yapıyı tarar, eksik VoLTE parçalarını ekler |
-| `scripts/volte` | Abone CLI: `add` / `del` / `list` / `check` (EPC + IMS birlikte) |
-| `scripts/lib/ayarlar.sh` | Merkezi config (HOST_IP, PLMN, URL'ler) |
+| `scripts/volte` | CLI: abone (`add`/`del`/`list`/`check`) + servis (`start`/`stop`/`status`/`restart`/`enable-boot`) + `create plmn` |
+| `scripts/lib/ayarlar.sh` | Merkezi config (HOST_IP, PLMN, dosya yolları, URL'ler) |
 | `scripts/lib/pyhss_api.sh` | pyHSS 5-adım IMS provisioning fonksiyonları |
 | `scripts/lib/webui_api.sh` | open5gs EPC abonesini MongoDB'ye tam APN ile yazar |
+| `scripts/lib/servis.sh` | Docker yığını + eNB yönetimi, PC reboot'a dayanıklı kalıcılık |
+| `scripts/lib/plmn.sh` | PLMN (MCC/MNC) değiştirme — tüm config'lerde, yedekli |
 
 ---
 
