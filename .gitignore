@@ -1,0 +1,10 @@
+# Sırlar — repoya ASLA girmemeli
+*.csv
+*_sim_*.txt
+sim_kartlar*.md
+.env
+secrets/
+# Geçici
+*.log
+*.tmp
+err.txt
